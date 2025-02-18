@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>五子棋</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #f0d9b5;
+            font-family: Arial, sans-serif;
+            user-select: none;
+        }
+
+        #mode-select {
+            display: flex;
+            gap: 20px;
+            margin: 20px;
+        }
+
+        .mode-btn {
+            padding: 15px 30px;
+            font-size: 18px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .mode-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
+            background: #45a049;
+        }
+
+        #game-container {
+            position: relative;
+            margin: 20px;
+            background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAIklEQVQIW2NkQAKrVq36zwjjgzhhYWGMYAEYB8RmROaABADeOQ8CXl/xfgAAAABJRU5ErkJggg==');
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+        }
+
+        #board {
+            display: grid;
+            grid-template-columns: repeat(15, 40px);
+            grid-template-rows: repeat(15, 40px);
+            gap: 0;
+            background: #deba88;
+            padding: 20px;
+            border: 2px solid #8b4513;
+        }
+
+        .cell {
+            width: 40px;
+            height: 40px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .cell:hover::after {
+            content: '';
+            position: absolute;
+            width: 30%;
+            height: 30%;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 50%;
+            left: 35%;
+            top: 35%;
+        }
+
+        .horizontal-line,
+        .vertical-line {
+            position: absolute;
+            background: #8b4513;
+        }
+
+        .horizontal-line {
+            width: 100%;
+            height: 1px;
+            top: 50%;
+        }
+
+        .vertical-line {
+            width: 1px;
+            height: 100%;
+            left: 50%;
+        }
+
+        .stone {
+            position: absolute;
+            width: 80%;
+            height: 80%;
+            border-radius: 50%;
+            left: 10%;
+            top: 10%;
+            animation: place 0.3s ease-out;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        @keyframes place {
+            from {
+                transform: scale(0);
+            }
+
+            to {
+                transform: scale(1);
+            }
+        }
+
+        .black {
+            background: radial-gradient(circle at 30% 30%, #666, #000);
+        }
+
+        .white {
+            background: radial-gradient(circle at 30% 30%, #fff, #ccc);
+        }
+
+        #info {
+            margin: 20px;
+            font-size: 24px;
+            color: #8b4513;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background: #8b4513;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: scale(1.1);
+            background: #a0522d;
+        }
+
+        #game-container,
+        #info,
+        #controls {
+            display: none;
+        }
+
+        #custom-menu {
+            display: none;
+            position: absolute;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            list-style-type: none;
+            padding: 8px 0;
+            margin: 0;
+            animation: fadeIn 0.2s ease-in-out;
+            min-width: 160px;
+            overflow: hidden;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        #custom-menu li {
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            font-size: 16px;
+            color: #333;
+            display: flex;
+            align-items: center;
+        }
+
+        #custom-menu li:hover {
+            background-color: #e0e0e0;
+            transform: scale(1.03);
+        }
+
+        #custom-menu li i {
+            margin-right: 12px;
+            font-size: 18px;
+            color: #777;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+
+<body>
+    <div id="mode-select">
+        <button class="mode-btn" onclick="startGame('pvp')">玩家 vs 玩家</button>
+        <button class="mode-btn" onclick="startGame('pve')">玩家 vs AI</button>
+    </div>
+    <p class="p">右键 / 长按打开菜单以返回</p>
+
+    <div id="info">当前玩家：黑棋</div>
+    <div id="game-container">
+        <div id="board"></div>
+    </div>
+    <div id="controls">
+        <button onclick="restart()">重新开始</button>
+    </div>
+
+    <ul id="custom-menu">
+        <li onclick="refreshPage()"><i class="fa-solid fa-arrows-rotate"></i> 返回模式选择</li>
+        <li onclick="goToMain()"><i class="fa-solid fa-house"></i> 返回主界面</li>
+    </ul>
+<script>
+let currentPlayer = 1;
+let board = Array(15).fill().map(() => Array(15).fill(0));
+let history = [];
+let gameMode = 'pvp';
+
+const customMenu = document.getElementById('custom-menu');
+let selectedText = '';
+
+document.addEventListener('contextmenu', function (e) {
+    e.preventDefault();
+    selectedText = window.getSelection().toString();
+    customMenu.style.display = 'block';
+    customMenu.style.left = e.pageX + 'px';
+    customMenu.style.top = e.pageY + 'px';
+});
+
+document.addEventListener('click', function (e) {
+    if (!customMenu.contains(e.target)) {
+        customMenu.style.display = 'none';
+    }
+});
+
+function refreshPage() {
+    location.reload();
+}
+
+function goToMain() {
+    window.location.href = 'http://8.138.108.157:233/';
+}
+
+function startGame(mode) {
+    gameMode = mode;
+    document.getElementById('mode-select').style.display = 'none';
+    document.getElementById('game-container').style.display = 'block';
+    document.getElementById('info').style.display = 'block';
+    document.getElementById('controls').style.display = 'block';
+    createBoard();
+}
+
+async function handleClick(e) {
+    const row = parseInt(e.target.dataset.row);
+    const col = parseInt(e.target.dataset.col);
+    await fetch('../php/record.php?action=record&player=' + currentPlayer + '&row=' + row + '&col=' + col);
+    if (board[row][col]!== 0) return;
+    history.push([...board.map(row => [...row])]);
+    board[row][col] = currentPlayer;
+    renderStone(row, col);
+    if (checkWin(row, col)) {
+        const winner = currentPlayer;
+        endGame(winner);
+        return;
+    }
+    if (gameMode === 'pve') {
+        currentPlayer = 2;
+        try {
+            const response = await fetch('../php/wzq.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ board: board })
+            });
+            const aiMove = await response.json();
+            history.push([...board.map(row => [...row])]);
+            board[aiMove.row][aiMove.col] = 2;
+            renderStone(aiMove.row, aiMove.col);
+            if (checkWin(aiMove.row, aiMove.col)) {
+                const winner = currentPlayer;
+                endGame(winner);
+            }
+            currentPlayer = 1;
+        } catch (error) {
+            console.error('AI-error:', error);
+        }
+    } else {
+        currentPlayer = currentPlayer === 1? 2 : 1;
+        updatePlayerInfo();
+    }
+}
+
+async function endGame(winner) {
+    setTimeout(async () => {
+        alert(`${winner === 1? '黑棋' : '白棋'}获胜！`);
+        if (winner === 1) {
+            await fetch('../php/record.php?action=save_win');
+        } else {
+            await fetch('../php/record.php?action=clear');
+        }
+        await restart();
+    }, 100);
+}
+
+function updatePlayerInfo() {
+    document.getElementById('info').textContent = `当前玩家：${currentPlayer === 1? '黑棋' : '白棋'}`;
+}
+
+function createBoard() {
+    const boardElement = document.getElementById('board');
+    boardElement.innerHTML = '';
+    for (let i = 0; i < 15; i++) {
+        for (let j = 0; j < 15; j++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.dataset.row = i;
+            cell.dataset.col = j;
+            if (i < 15) cell.appendChild(createLine('horizontal'));
+            if (j < 15) cell.appendChild(createLine('vertical'));
+            cell.addEventListener('click', handleClick);
+            boardElement.appendChild(cell);
+        }
+    }
+}
+
+function createLine(type) {
+    const line = document.createElement('div');
+    line.className = `${type}-line`;
+    return line;
+}
+
+function renderStone(row, col) {
+    const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+    const stone = document.createElement('div');
+    stone.className = `stone ${currentPlayer === 1? 'black' : 'white'}`;
+    cell.appendChild(stone);
+}
+
+function checkWin(row, col) {
+    const directions = [
+        [[-1, 0], [1, 0]],
+        [[0, -1], [0, 1]],
+        [[-1, -1], [1, 1]],
+        [[-1, 1], [1, -1]]
+    ];
+    return directions.some(direction => {
+        let count = 1;
+        direction.forEach(([dx, dy]) => {
+            let x = row + dx;
+            let y = col + dy;
+            while (x >= 0 && x < 15 && y >= 0 && y < 15 && board[x][y] === currentPlayer) {
+                count++;
+                x += dx;
+                y += dy;
+            }
+        });
+        return count >= 5;
+    });
+}
+
+function redrawBoard() {
+    document.querySelectorAll('.stone').forEach(stone => stone.remove());
+    board.forEach((row, i) => {
+        row.forEach((cell, j) => {
+            if (cell!== 0) {
+                const stone = document.createElement('div');
+                stone.className = `stone ${cell === 1? 'black' : 'white'}`;
+                document.querySelector(`[data-row="${i}"][data-col="${j}"]`).appendChild(stone);
+            }
+        });
+    });
+}
+
+async function restart() {
+    try {
+        await fetch('../php/record.php?action=clear');
+    } catch (error) {
+        console.error('清除 ls.txt 文件内容时出错:', error);
+    }
+    board = Array(15).fill().map(() => Array(15).fill(0));
+    history = [];
+    currentPlayer = 1;
+    document.getElementById('info').textContent = '当前玩家：黑棋';
+    redrawBoard();
+}
+</script>
+</body>
+
+</html>
