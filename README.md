@@ -20,6 +20,6 @@ You must put it on a server that can run PHP
 
 不同的是，它拥有 AI 与玩家对战的功能（虽然我不知道有没有人做过类似的）
 
-The V2 version update has added the feature that AI will read the winning game after the user wins it, and analyze the read content during subsequent matches
+V2 版本更新增加了 AI 在用户获胜后读取获胜游戏的功能，并在后续比赛中分析读取的内容
 
 你必须把它放在可以运行 PHP 的服务器上
